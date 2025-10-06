@@ -2,11 +2,11 @@ import express from 'express';
 import dotenv from 'dotenv';
 import chalk from 'chalk';
 import dayjs from 'dayjs';
-import path from 'path';
 import http from "http";
 import InitalizeWebSocket from './socket';
 import AuthMiddle from './authMiddle';
 import { getStaticInfo } from './systemInfo';
+import * as fs from 'fs';
 
 dotenv.config({
     "path": "config.env",
@@ -48,7 +48,29 @@ app.use(AuthMiddle);
 const server = http.createServer(app);
 InitalizeWebSocket(server);
 
-app.use("/os_logos", express.static(path.join(__dirname, "os_logos")));
+app.use("/os_logos/:file", (req, res) => {
+    try {
+        const { file } = req.params;
+        const path = `./os_logos/${file}`;
+        if (!fs.existsSync(path)) return res.status(404).json({
+            "code": 404,
+            "message": "Not Found"
+        });
+
+        const read = fs.readFileSync(path);
+
+        return res.status(200).json({
+            "img": `data:image/png;base64,${Buffer.from(read).toString("base64")}`
+        });
+    } catch (err) {
+        const e = err as Error;
+        log(chalk.red("ERROR"), e.message);
+        return res.status(500).json({
+            "code": 500,
+            "message": e.message
+        });
+    }
+});
 
 app.get("/", async (req, res) => {
     try {
