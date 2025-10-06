@@ -88,16 +88,16 @@ export async function getStaticInfo(scheme: string = "dark") {
             "release": os.release,
             "logoUri": (() => {
                 switch (os.logofile) {
-                    case "android": return "/os_logos/android.svg";
-                    case "apple": return scheme === "dark" ? "/os_logos/apple_dark.svg" : "/os_logos/apple_light.svg";
-                    case "macos": return scheme === "dark" ? "/os_logos/apple_dark.svg" : "/os_logos/apple_light.svg";
-                    case "debian": return "/os_logos/debian.svg";
-                    case "fedora": return "/os_logos/fedora.svg";
-                    case "ubuntu": return "/os_logos/ubuntu.svg";
-                    case "windows": return "/os_logos/windows.svg";
+                    case "android": return "/os_logos/android.png";
+                    case "apple": return scheme === "dark" ? "/os_logos/apple_dark.png" : "/os_logos/apple_light.png";
+                    case "macos": return scheme === "dark" ? "/os_logos/apple_dark.png" : "/os_logos/apple_light.png";
+                    case "debian": return "/os_logos/debian.png";
+                    case "fedora": return "/os_logos/fedora.png";
+                    case "ubuntu": return "/os_logos/ubuntu.png";
+                    case "windows": return "/os_logos/windows.png";
                 }
 
-                return "/os_logos/lunux.svg";
+                return "/os_logos/lunux.png";
             })()
         }
     }
