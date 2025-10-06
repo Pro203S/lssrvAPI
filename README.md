@@ -141,8 +141,16 @@ interface RealtimeInfo {
         used: number;
     };
     net: {
-        downBps: number;
-        downMbps: number;
+        down: {
+            Bps: number;
+            KBps: number;
+            MBps: number;
+        };
+        up: {
+            Bps: number;
+            KBps: number;
+            MBps: number;
+        };
         sent: number;
         received: number;
     };

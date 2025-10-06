@@ -1,18 +1,32 @@
 import info from 'systeminformation';
 
 let networkStats = {
-    down: 0,
-    up: 0,
+    down: {
+        "Bps": 0,
+        "KBps": 0,
+        "MBps": 0
+    },
+    up: {
+        "Bps": 0,
+        "KBps": 0,
+        "MBps": 0
+    },
     sent: 0,
     received: 0
 };
 
-const toMbps = (bps: number) => (bps * 8) / 1_000_000;
+function convertUnits(Bps: number) {
+    return {
+        Bps,
+        KBps: Bps / 1_000, // 1 KB = 1000 bytes
+        MBps: Bps / 1_000_000
+    };
+}
 let networkStatsInterval: NodeJS.Timeout | null = null;
 
 async function monitorNetwork(intervalMs = 1000) {
     if (networkStatsInterval) return;
-    
+
     const iface = await info.networkInterfaceDefault().catch(() => "");
     if (!iface) {
         console.error("활성 네트워크 인터페이스를 찾지 못했습니다.");
@@ -30,8 +44,8 @@ async function monitorNetwork(intervalMs = 1000) {
         const up = s.tx_sec ?? 0;
 
         networkStats = {
-            down: toMbps(down),
-            up: toMbps(up),
+            down: convertUnits(down),
+            up: convertUnits(up),
             sent: s.tx_bytes,
             received: s.rx_bytes
         };
