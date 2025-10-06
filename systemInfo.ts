@@ -1,8 +1,8 @@
 import info from 'systeminformation';
 
 let networkStats = {
-    downBps: 0,
-    downMbps: 0,
+    down: 0,
+    up: 0,
     sent: 0,
     received: 0
 };
@@ -30,8 +30,8 @@ async function monitorNetwork(intervalMs = 1000) {
         const up = s.tx_sec ?? 0;
 
         networkStats = {
-            downBps: down,
-            downMbps: toMbps(down),
+            down: toMbps(down),
+            up: toMbps(up),
             sent: s.tx_bytes,
             received: s.rx_bytes
         };
