@@ -98,7 +98,19 @@ interface WebSocketResponse {
 
 ([StaticInfo](#staticinfo)의 타입은 아래 [타입 선언](#타입-선언) 문단에 있습니다)  
 
-서버는 1초마다 현재 CPU 온도, CPU 사용량, 메모리 사용량, 네트워크 사용량을 [RealtimeInfo](#realtimeinfo)의 타입에 맞게 반환합니다.
+서버는 기본적으로 1초마다 현재 CPU 온도, CPU 사용량, 메모리 사용량, 네트워크 사용량을 [RealtimeInfo](#realtimeinfo)의 타입에 맞게 반환합니다.
+
+### RealtimeInfo 간격 설정
+
+서버에서 RealtimeInfo를 보낼 간격을 설정할 수 있습니다.  
+서버에 아래의 타입에 맞게 값을 보내면 설정됩니다.
+
+```typescript
+interface WebSocketSend {
+    type: "interval",
+    interval: number
+}
+```
 
 ### 연결 종료
 

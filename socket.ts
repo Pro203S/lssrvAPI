@@ -43,9 +43,15 @@ const InitalizeWebSocket = (server: http.Server) => {
             "info": await getStaticInfo()
         }));
 
+        let realtimeInterval: number = 1000;
+
         let heartbeatCount: number = 0;
         let heartbeatTimer: NodeJS.Timeout | null = null;
         let heartbeatWatchdog: NodeJS.Timeout | null = null;
+
+        let sendInformation = setInterval(async () => {
+            ws.send(JSON.stringify(await getRealtimeInfo()));
+        }, realtimeInterval);
 
         heartbeatTimer = setInterval(() => {
             heartbeatWatchdog = setTimeout(() => {
@@ -81,6 +87,16 @@ const InitalizeWebSocket = (server: http.Server) => {
                     return;
                 }
 
+                if (json.type === "interval") {
+                    realtimeInterval = json.interval;
+
+                    clearInterval(sendInformation);
+                    sendInformation = setInterval(async () => {
+                        ws.send(JSON.stringify(await getRealtimeInfo()));
+                    }, realtimeInterval);
+                    return;
+                }
+
                 ws.close(4000, "Unsupported Operation");
                 return;
             } catch (err) {
@@ -89,10 +105,6 @@ const InitalizeWebSocket = (server: http.Server) => {
                 ws.close(1011, e.name);
             }
         });
-
-        const sendInformation = setInterval(async () => {
-            ws.send(JSON.stringify(await getRealtimeInfo()));
-        }, 1000);
 
         ws.on("close", () => {
             clearInterval(heartbeatTimer!);
