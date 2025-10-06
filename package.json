@@ -1,0 +1,27 @@
+{
+  "name": "systeminformationapi",
+  "version": "1.0.0",
+  "description": "SystemInformationAPI",
+  "license": "ISC",
+  "author": "Pro203S",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "start": "ts-node index.ts",
+    "dev": "nodemon -e ts index.ts"
+  },
+  "dependencies": {
+    "chalk": "^5.6.2",
+    "dayjs": "^1.11.18",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "systeminformation": "^5.27.11"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.7.0",
+    "nodemon": "^3.1.10",
+    "typescript": "^5.9.3"
+  },
+  "keywords": []
+}
