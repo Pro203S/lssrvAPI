@@ -4,13 +4,19 @@ import chalk from 'chalk';
 import dayjs from 'dayjs';
 import info from 'systeminformation';
 import path from 'path';
+import http from "http";
+import InitalizeWebSocket from './socket';
+import AuthMiddle from './authMiddle';
+
 dotenv.config({
     "path": "config.env",
     "quiet": true
 });
 
 const app = express();
+export const log = (...args: any[]) => console.log(`[${chalk.gray(dayjs().format("YYYY/MM/DD HH:MM:ss.SSS"))}]`, ...args);
 
+//#region Check config.env
 if (!process.env.PORT) {
     console.error(chalk.red("PORT key in config.env is missing. Please set it."));
     process.exit(1);
@@ -23,8 +29,7 @@ if (!process.env.AUTH_PW) {
     console.error(chalk.red("AUTH_PW key in config.env is missing. Please set it."));
     process.exit(1);
 }
-
-const log = (...args: string[]) => console.log(`[${chalk.gray(dayjs().format("YYYY/MM/DD HH:MM:ss.SSS"))}]`, ...args);
+//#endregion
 
 log("SystemInformationAPI\n");
 
@@ -32,6 +37,11 @@ log("config.env:");
 log("- PORT:", process.env.PORT);
 log("- REQUIRED_PW:", process.env.REQUIRED_PW);
 log("- AUTH_PW:", process.env.AUTH_PW.split("").map(v => "*").join(""), "\n");
+
+app.use(AuthMiddle);
+
+const server = http.createServer(app);
+InitalizeWebSocket(server);
 
 app.use("/os_logos", express.static(path.join(__dirname, "os_logos")));
 
@@ -77,8 +87,6 @@ app.get("/", async (req, res) => {
     }
 });
 
-app.use
-
-app.listen(process.env.PORT, () => {
+server.listen(process.env.PORT, () => {
     log("API server listening on", process.env.PORT);
 });
