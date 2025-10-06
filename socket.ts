@@ -1,5 +1,8 @@
 import http from "http";
-import { WebSocketServer, WebSocket } from "ws";
+import { WebSocketServer } from "ws";
+import { log } from ".";
+import chalk from "chalk";
+import { getRealtimeInfo, getStaticInfo } from "./systemInfo";
 
 const InitalizeWebSocket = (server: http.Server) => {
     const wss = new WebSocketServer({ noServer: true, perMessageDeflate: true });
@@ -28,13 +31,32 @@ const InitalizeWebSocket = (server: http.Server) => {
         });
     });
 
-    wss.on("connection", (ws, req) => {
-        const ip = (req.headers["x-forwarded-for"] || req.socket.remoteAddress) as string;
-
+    wss.on("connection", async (ws) => {
+        //const ip = (req.headers["x-forwarded-for"] || req.socket.remoteAddress) as string;
+        const heartbeatInterval = Number(process.env.HEARTBEAT_INTERVAL);
         ws.send(JSON.stringify({
             "type": "hello",
-            ip
+            "heartbeatInterval": heartbeatInterval
         }));
+        ws.send(JSON.stringify({
+            "type": "static",
+            "info": await getStaticInfo()
+        }));
+
+        let heartbeatCount: number = 0;
+        let heartbeatTimer: NodeJS.Timeout | null = null;
+        let heartbeatWatchdog: NodeJS.Timeout | null = null;
+
+        heartbeatTimer = setInterval(() => {
+            heartbeatWatchdog = setTimeout(() => {
+                if (heartbeatCount === 0) {
+                    ws.close(4000, "heartbeat has not been received");
+                    return;
+                }
+
+                heartbeatCount = 0;
+            }, 1500);
+        }, heartbeatInterval);
 
         ws.on("message", (data, isBinary) => {
             if (isBinary) {
@@ -46,15 +68,37 @@ const InitalizeWebSocket = (server: http.Server) => {
                 const json = JSON.parse(data.toString().trimEnd());
 
                 if (json.type === "heartbeat") {
+                    heartbeatCount++;
 
+                    if (heartbeatCount > 1) {
+                        ws.close(4000, "Too many heartbeats");
+                        return;
+                    }
+
+                    ws.send(JSON.stringify({
+                        "type": "heartbeat"
+                    }));
+                    return;
                 }
+
+                ws.close(4000, "Unsupported Operation");
+                return;
             } catch (err) {
                 const e = err as Error;
+                log(chalk.red("ERROR"), e.message);
                 ws.close(1011, e.name);
             }
         });
 
+        const sendInformation = setInterval(async () => {
+            ws.send(JSON.stringify(await getRealtimeInfo()));
+        }, 1000);
 
+        ws.on("close", () => {
+            clearInterval(heartbeatTimer!);
+            clearTimeout(heartbeatWatchdog!);
+            clearInterval(sendInformation);
+        });
     });
 };
 

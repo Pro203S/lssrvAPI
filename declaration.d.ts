@@ -5,6 +5,8 @@ declare global {
 
             readonly REQUIRED_PW: "yes" | "no";
             readonly AUTH_PW: string;
+
+            readonly HEARTBEAT_INTERVAL: string;
         }
     }
 }
