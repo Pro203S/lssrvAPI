@@ -38,22 +38,22 @@ app.use("/os_logos", express.static(path.join(__dirname, "os_logos")));
 app.get("/", async (req, res) => {
     try {
         const cpu = await info.cpu();
+        const cputmp = await info.cpuTemperature();
         const mem = await info.mem();
         const net = (await info.networkStats())[0];
-        
+
         return res.status(200).json({
             "cpu": {
                 "manufacturer": cpu.manufacturer,
                 "brand": cpu.brand,
-                "vendor": cpu.vendor,
-                "family": cpu.family,
                 "cores": cpu.cores,
                 "speed": {
                     "max": cpu.speedMax,
                     "min": cpu.speedMin,
                     "cur": cpu.speed
                 },
-                "socket": cpu.socket
+                "socket": cpu.socket,
+                "temp": cputmp.main
             },
             "mem": {
                 "total": mem.total,
