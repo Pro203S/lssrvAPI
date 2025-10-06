@@ -38,32 +38,17 @@ app.use("/os_logos", express.static(path.join(__dirname, "os_logos")));
 app.get("/", async (req, res) => {
     try {
         const cpu = await info.cpu();
-        const cputmp = await info.cpuTemperature();
         const mem = await info.mem();
-        const net = (await info.networkStats())[0];
+        const os = await info.osInfo();
 
         return res.status(200).json({
             "cpu": {
                 "manufacturer": cpu.manufacturer,
                 "brand": cpu.brand,
-                "cores": cpu.cores,
-                "speed": {
-                    "max": cpu.speedMax,
-                    "min": cpu.speedMin,
-                    "cur": cpu.speed
-                },
-                "socket": cpu.socket,
-                "temp": cputmp.main
+                "cores": cpu.cores
             },
-            "mem": {
-                "total": mem.total,
-                "free": mem.free,
-                "used": mem.used
-            },
-            "net": {
-                "received": net.rx_bytes,
-                "sent": net.tx_bytes
-            }
+            "mem": mem.total,
+            os
         });
     } catch (err) {
         const e = err as Error;
@@ -73,7 +58,9 @@ app.get("/", async (req, res) => {
             "message": e.message
         });
     }
-})
+});
+
+app.use
 
 app.listen(process.env.PORT, () => {
     log("API server listening on", process.env.PORT);
