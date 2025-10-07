@@ -89,8 +89,8 @@ export async function getStaticInfo(scheme: string = "dark") {
             "logoUri": (() => {
                 switch (os.logofile) {
                     case "android": return "/os_logos/android.png";
-                    case "apple": return scheme === "dark" ? "/os_logos/apple_dark.png" : "/os_logos/apple_light.png";
-                    case "macos": return scheme === "dark" ? "/os_logos/apple_dark.png" : "/os_logos/apple_light.png";
+                    case "apple": return scheme === "dark" ? "/os_logos/apple_light.png" : "/os_logos/apple_dark.png";
+                    case "macos": return scheme === "dark" ? "/os_logos/apple_light.png" : "/os_logos/apple_dark.png";
                     case "debian": return "/os_logos/debian.png";
                     case "fedora": return "/os_logos/fedora.png";
                     case "ubuntu": return "/os_logos/ubuntu.png";

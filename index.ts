@@ -6,6 +6,7 @@ import http from "http";
 import InitalizeWebSocket from './socket';
 import AuthMiddle from './authMiddle';
 import { getStaticInfo } from './systemInfo';
+import imageSize from 'image-size';
 import * as fs from 'fs';
 
 dotenv.config({
@@ -59,8 +60,12 @@ app.use("/os_logos/:file", (req, res) => {
 
         const read = fs.readFileSync(path);
 
+        const size = imageSize(read);
+
         return res.status(200).json({
-            "img": `data:image/png;base64,${Buffer.from(read).toString("base64")}`
+            "img": `data:image/png;base64,${Buffer.from(read).toString("base64")}`,
+            "width": size.width,
+            "height": size.height
         });
     } catch (err) {
         const e = err as Error;
