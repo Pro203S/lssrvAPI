@@ -92,8 +92,8 @@ export async function getStaticInfo(scheme: string = "dark") {
             "brand": (() => {
                 const brand = cpu.brand;
                 if (!brand.startsWith("Ryzen")) return brand;
-                
-                return brand.replace(/\d-Core Processor/i, "");
+
+                return brand.replace(/ \d-Core Processor/i, "");
             })(),
             "cores": cpu.cores
         },
