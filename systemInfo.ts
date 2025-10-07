@@ -75,6 +75,16 @@ export async function getStaticInfo(scheme: string = "dark") {
     const cpu = await info.cpu();
     const mem = await info.mem();
     const os = await info.osInfo();
+    const disk = await info.fsSize();
+    const diskTTL = disk.reduce(
+        (acc, d) => {
+            acc.total += d.size;
+            acc.used += d.used;
+            return acc;
+        },
+        { total: 0, used: 0 }
+    );
+
 
     return {
         "cpu": {
@@ -97,8 +107,9 @@ export async function getStaticInfo(scheme: string = "dark") {
                     case "windows": return "/os_logos/windows.png";
                 }
 
-                return "/os_logos/lunux.png";
+                return "/os_logos/linux.png";
             })()
-        }
+        },
+        "disk": diskTTL
     }
 }
