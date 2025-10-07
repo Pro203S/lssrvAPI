@@ -89,7 +89,12 @@ export async function getStaticInfo(scheme: string = "dark") {
     return {
         "cpu": {
             "manufacturer": cpu.manufacturer,
-            "brand": cpu.brand,
+            "brand": (() => {
+                const brand = cpu.brand;
+                if (!brand.startsWith("Ryzen")) return brand;
+                
+                return brand.replace(/\d-Core Processor/i, "");
+            })(),
             "cores": cpu.cores
         },
         "mem": mem.total,

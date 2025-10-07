@@ -1,5 +1,5 @@
 import http from "http";
-import WebSocket, { WebSocketServer } from "ws";
+import { WebSocketServer } from "ws";
 import { log } from ".";
 import chalk from "chalk";
 import { getRealtimeInfo, getStaticInfo } from "./systemInfo";
