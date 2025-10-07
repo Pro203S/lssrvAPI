@@ -99,7 +99,12 @@ export async function getStaticInfo(scheme: string = "dark") {
         },
         "mem": mem.total,
         "os": {
-            "name": os.distro,
+            "name": (() => {
+                const distro = os.distro;
+                if (!distro.startsWith("Microsoft ")) return;
+
+                return distro.replace("Microsoft ", "");
+            })(),
             "release": os.release,
             "logoUri": (() => {
                 switch (os.logofile) {
