@@ -51,21 +51,12 @@ async function monitorNetwork(intervalMs = 1000) {
         };
     }, intervalMs);
 };
-monitorNetwork(1000);
+monitorNetwork(100);
 
 export async function getRealtimeInfo() {
     const cpuTemp = await info.cpuTemperature();
     const cpuInfo = await info.cpu();
     const ram = await info.mem();
-    const disk = await info.fsSize();
-    const diskTTL = disk.reduce(
-        (acc, d) => {
-            acc.total += d.size;
-            acc.used += d.used;
-            return acc;
-        },
-        { total: 0, used: 0 }
-    );
 
     return {
         "cpu": {
@@ -76,8 +67,7 @@ export async function getRealtimeInfo() {
             "total": ram.total,
             "used": ram.used
         },
-        "net": networkStats,
-        "disk": diskTTL
+        "net": networkStats
     };
 }
 
@@ -85,16 +75,7 @@ export async function getStaticInfo(scheme: string = "dark") {
     const cpu = await info.cpu();
     const mem = await info.mem();
     const os = await info.osInfo();
-    const disk = await info.fsSize();
-    const diskTTL = disk.reduce(
-        (acc, d) => {
-            acc.total += d.size;
-            acc.used += d.used;
-            return acc;
-        },
-        { total: 0, used: 0 }
-    );
-
+    const { uptime } = info.time();
 
     return {
         "cpu": {
@@ -130,6 +111,6 @@ export async function getStaticInfo(scheme: string = "dark") {
                 return "/os_logos/linux.png";
             })()
         },
-        "disk": diskTTL
+        "uptime": uptime
     }
 }
