@@ -1,5 +1,5 @@
 import http from "http";
-import { WebSocketServer } from "ws";
+import WebSocket, { WebSocketServer } from "ws";
 import { log } from ".";
 import chalk from "chalk";
 import { getRealtimeInfo, getStaticInfo } from "./systemInfo";
@@ -8,7 +8,7 @@ const InitalizeWebSocket = (server: http.Server) => {
     const wss = new WebSocketServer({ noServer: true, perMessageDeflate: true });
 
     server.on("upgrade", (req, socket, head) => {
-        const { url, headers } = req;
+        const { url } = req;
         if (!url?.startsWith("/socket")) {
             socket.write("HTTP/1.1 400 Bad Request\r\n\r\n");
             socket.destroy();
@@ -16,10 +16,7 @@ const InitalizeWebSocket = (server: http.Server) => {
         }
 
         if (process.env.REQUIRED_PW === "yes") {
-            const originPw = Buffer.from(process.env.AUTH_PW).toString("base64");
-            const gotPw = headers.authorization;
-
-            if (gotPw !== originPw) {
+            if (!url?.endsWith("?pw=" + btoa(process.env.AUTH_PW))) {
                 socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
                 socket.destroy();
                 return;
@@ -33,6 +30,7 @@ const InitalizeWebSocket = (server: http.Server) => {
 
     wss.on("connection", async (ws) => {
         //const ip = (req.headers["x-forwarded-for"] || req.socket.remoteAddress) as string;
+
         const heartbeatInterval = Number(process.env.HEARTBEAT_INTERVAL);
         ws.send(JSON.stringify({
             "type": "hello",
