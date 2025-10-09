@@ -92,7 +92,7 @@ export async function getStaticInfo(scheme: string = "dark") {
         "os": {
             "name": (() => {
                 const distro = os.distro;
-                if (!distro.startsWith("Microsoft ")) return;
+                if (!distro.startsWith("Microsoft ")) return distro;
 
                 return distro.replace("Microsoft ", "");
             })(),
