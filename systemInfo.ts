@@ -1,31 +1,16 @@
 import info from 'systeminformation';
 
 let networkStats = {
-    down: {
-        "Bps": 0,
-        "KBps": 0,
-        "MBps": 0
-    },
-    up: {
-        "Bps": 0,
-        "KBps": 0,
-        "MBps": 0
-    },
+    down: 0,
+    up: 0,
     sent: 0,
     received: 0
 };
 
-function convertUnits(Bps: number) {
-    return {
-        Bps,
-        KBps: Bps / 1_000, // 1 KB = 1000 bytes
-        MBps: Bps / 1_000_000
-    };
-}
-let networkStatsInterval: NodeJS.Timeout | null = null;
+let isMonitoring = false;
 
-async function monitorNetwork(intervalMs = 1000) {
-    if (networkStatsInterval) return;
+async function monitorNetwork() {
+    if (isMonitoring) return;
 
     const iface = await info.networkInterfaceDefault().catch(() => "");
     if (!iface) {
@@ -33,41 +18,46 @@ async function monitorNetwork(intervalMs = 1000) {
         return;
     }
 
+    isMonitoring = true;
+
     // baseline
     await info.networkStats(iface);
 
-    networkStatsInterval = setInterval(async () => {
-        const statsArr = await info.networkStats(iface);
-        const s = Array.isArray(statsArr) ? statsArr[0] : statsArr;
+    const statsArr = await info.networkStats(iface);
+    const s = Array.isArray(statsArr) ? statsArr[0] : statsArr;
 
-        const down = s.rx_sec ?? 0;
-        const up = s.tx_sec ?? 0;
+    const down = s.rx_sec ?? 0;
+    const up = s.tx_sec ?? 0;
 
-        networkStats = {
-            down: convertUnits(down),
-            up: convertUnits(up),
-            sent: s.tx_bytes,
-            received: s.rx_bytes
-        };
-    }, intervalMs);
+    networkStats = {
+        down: down,
+        up: up,
+        sent: s.tx_bytes,
+        received: s.rx_bytes
+    };
+    await new Promise(r => setTimeout(r, 1000));
+    await monitorNetwork();
 };
-monitorNetwork(100);
+monitorNetwork();
 
 export async function getRealtimeInfo() {
     const cpuTemp = await info.cpuTemperature();
-    const cpuInfo = await info.cpu();
     const ram = await info.mem();
+    const { uptime } = info.time();
+    const cpuSpd = await info.cpuCurrentSpeed();
 
     return {
         "cpu": {
             "temp": cpuTemp.main ?? -1,
-            "speed": cpuInfo.speed
+            "cpuSpeed": cpuSpd,
+            "cpu": (await info.currentLoad()).avgLoad * 100
         },
         "ram": {
             "total": ram.total,
             "used": ram.used
         },
-        "net": networkStats
+        "net": networkStats,
+        "uptime": uptime
     };
 }
 
@@ -75,7 +65,6 @@ export async function getStaticInfo(scheme: string = "dark") {
     const cpu = await info.cpu();
     const mem = await info.mem();
     const os = await info.osInfo();
-    const { uptime } = info.time();
 
     return {
         "cpu": {
@@ -110,7 +99,6 @@ export async function getStaticInfo(scheme: string = "dark") {
 
                 return "/os_logos/linux.png";
             })()
-        },
-        "uptime": uptime
+        }
     }
 }
