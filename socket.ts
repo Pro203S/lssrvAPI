@@ -34,11 +34,11 @@ const InitalizeWebSocket = (server: http.Server) => {
         const heartbeatInterval = Number(process.env.HEARTBEAT_INTERVAL);
         ws.send(JSON.stringify({
             "type": "hello",
-            "heartbeatInterval": heartbeatInterval
+            "data": heartbeatInterval
         }));
         ws.send(JSON.stringify({
             "type": "static",
-            "info": await getStaticInfo()
+            "data": await getStaticInfo()
         }));
 
         let realtimeInterval: number = 1000;
