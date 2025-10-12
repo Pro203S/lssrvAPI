@@ -40,44 +40,54 @@ async function monitorNetwork() {
 };
 monitorNetwork();
 
-export async function getRealtimeInfo() {
+export async function realtime_cpu() {
     const cpuTemp = await info.cpuTemperature();
-    const ram = await info.mem();
-    const { uptime } = info.time();
     const cpuSpd = await info.cpuCurrentSpeed();
     const cpuLoad = (await info.currentLoad()).cpus.map(v => v.load);
 
     return {
-        "cpu": {
-            "temp": cpuTemp.main ?? -999,
-            "speed": cpuSpd.avg,
-            "load": (() => {
-                let total = 0;
+        "temp": cpuTemp.main ?? -999,
+        "speed": cpuSpd.avg,
+        "load": (() => {
+            let total = 0;
 
-                for (let load of cpuLoad) {
-                    total += load;
-                }
+            for (let load of cpuLoad) {
+                total += load;
+            }
 
-                return Math.round((total / cpuLoad.length) * 100) / 100;
-            })()
-        },
-        "ram": {
-            "total": ram.total,
-            "used": ram.used
-        },
-        "net": networkStats,
-        "uptime": uptime,
-        "disks": (await info.diskLayout()).map(v => ({
-            "device": v.device,
-            "type": v.type,
-            "name": v.name,
-            "vendor": v.vendor,
-            "size": v.size,
-            "temp": v.temperature ?? -999
-        })),
-        "fsStats": await info.fsStats(),
-        "fsSize": await info.fsSize()
+            return Math.round((total / cpuLoad.length) * 100) / 100;
+        })()
     };
+}
+export async function realtime_ram() {
+    const ram = await info.mem();
+
+    return {
+        "total": ram.total,
+        "used": ram.used
+    };
+}
+export function realtime_net() {
+    return networkStats;
+}
+export function realtime_uptime() {
+    return info.time().uptime;
+}
+export async function realtime_disks() {
+    return (await info.diskLayout()).map(v => ({
+        "device": v.device,
+        "type": v.type,
+        "name": v.name,
+        "vendor": v.vendor,
+        "size": v.size,
+        "temp": v.temperature ?? -999
+    }));
+}
+export async function realtime_fsStats() {
+    return await info.fsStats();
+}
+export async function realtime_fsSize() {
+    return await info.fsSize();
 }
 
 export async function getStaticInfo(scheme: string = "dark") {
