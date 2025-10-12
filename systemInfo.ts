@@ -36,7 +36,7 @@ async function monitorNetwork() {
         received: s.rx_bytes
     };
     await new Promise(r => setTimeout(r, 1000));
-    await monitorNetwork();
+    return await monitorNetwork();
 };
 monitorNetwork();
 
