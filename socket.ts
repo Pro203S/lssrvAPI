@@ -99,6 +99,8 @@ const InitalizeWebSocket = (server: http.Server) => {
                 return;
             } catch (err) {
                 const e = err as Error;
+                if (e.message.includes("JSON")) return ws.close(1003, "Unsupported Data");
+
                 log(chalk.red("ERROR"), e.message);
                 ws.close(1011, e.name);
             }
