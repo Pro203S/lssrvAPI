@@ -45,7 +45,6 @@ export async function getRealtimeInfo() {
     const ram = await info.mem();
     const { uptime } = info.time();
     const cpuSpd = await info.cpuCurrentSpeed();
-    const diskIO = await info.disksIO();
 
     return {
         "cpu": {
@@ -68,15 +67,7 @@ export async function getRealtimeInfo() {
             "temp": v.temperature ?? -1
         })),
         "fsStats": await info.fsStats(),
-        "fsSize": await info.fsSize(),
-        "diskIO": {
-            "read": diskIO.rIO,
-            "read_per_sec": diskIO.rIO_sec,
-            "write": diskIO.wIO,
-            "write_per_sec": diskIO.wIO_sec,
-            "total": diskIO.tIO,
-            "totla_per_sec": diskIO.tIO_sec
-        }
+        "fsSize": await info.fsSize()
     };
 }
 
