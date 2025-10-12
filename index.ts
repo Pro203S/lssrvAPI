@@ -1,3 +1,5 @@
+const now = new Date();
+
 import express from 'express';
 import dotenv from 'dotenv';
 import chalk from 'chalk';
@@ -92,5 +94,6 @@ app.get("/", async (req, res) => {
 });
 
 server.listen(process.env.PORT, () => {
+    log("Server ready in " + (new Date().getTime() - now.getTime()) + "ms");
     log("API server listening on", process.env.PORT);
 });

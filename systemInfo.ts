@@ -45,19 +45,21 @@ export async function getRealtimeInfo() {
     const ram = await info.mem();
     const { uptime } = info.time();
     const cpuSpd = await info.cpuCurrentSpeed();
+    const disks = await info.disksIO();
 
     return {
         "cpu": {
             "temp": cpuTemp.main ?? -1,
-            "cpuSpeed": cpuSpd,
-            "cpu": (await info.currentLoad()).avgLoad * 100
+            "speed": cpuSpd,
+            "load": (await info.currentLoad()).cpus.map(v => v.load)
         },
         "ram": {
             "total": ram.total,
             "used": ram.used
         },
         "net": networkStats,
-        "uptime": uptime
+        "uptime": uptime,
+        "disks": disks
     };
 }
 
