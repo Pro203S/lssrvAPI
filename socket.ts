@@ -103,7 +103,7 @@ const InitalizeWebSocket = (server: http.Server) => {
                 isStopped[3] = false;
 
                 ws.send(JSON.stringify({
-                    "type": "cpu",
+                    "type": "uptime",
                     "data": realtime_uptime()
                 }))
 
