@@ -62,7 +62,7 @@ async function monitorCpu() {
         })()
     };
 
-    await new Promise(r => setTimeout(r, 1000));
+    await new Promise(r => setTimeout(r, 500));
     return await monitorCpu();
 }
 async function monitorRam() {
@@ -75,7 +75,7 @@ async function monitorRam() {
         "used": ram.used
     };
 
-    await new Promise(r => setTimeout(r, 1000));
+    await new Promise(r => setTimeout(r, 500));
     return await monitorRam();
 }
 async function monitorNet() {
@@ -104,7 +104,7 @@ async function monitorNet() {
         sent: s.tx_bytes,
         received: s.rx_bytes
     };
-    await new Promise(r => setTimeout(r, 1000));
+    await new Promise(r => setTimeout(r, 500));
     return await monitorNet();
 }
 async function monitorUptime() {
@@ -112,7 +112,7 @@ async function monitorUptime() {
 
     datas.uptime = info.time().uptime;
 
-    await new Promise(r => setTimeout(r, 1000));
+    await new Promise(r => setTimeout(r, 500));
     return await monitorUptime();
 }
 async function monitorDisks() {
@@ -127,7 +127,7 @@ async function monitorDisks() {
         "temp": v.temperature ?? -999
     }));
 
-    await new Promise(r => setTimeout(r, 1000));
+    await new Promise(r => setTimeout(r, 500));
     return await monitorDisks();
 }
 async function monitorFsStats() {
@@ -135,7 +135,7 @@ async function monitorFsStats() {
 
     datas.fsStats = await info.fsStats();
 
-    await new Promise(r => setTimeout(r, 1000));
+    await new Promise(r => setTimeout(r, 500));
     return await monitorFsStats();
 }
 async function monitorFsSize() {
@@ -143,7 +143,7 @@ async function monitorFsSize() {
 
     datas.fsSize = await info.fsSize();
 
-    await new Promise(r => setTimeout(r, 1000));
+    await new Promise(r => setTimeout(r, 500));
     return await monitorFsSize();
 }
 
