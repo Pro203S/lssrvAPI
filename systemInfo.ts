@@ -45,12 +45,21 @@ export async function getRealtimeInfo() {
     const ram = await info.mem();
     const { uptime } = info.time();
     const cpuSpd = await info.cpuCurrentSpeed();
+    const cpuLoad = (await info.currentLoad()).cpus.map(v => v.load);
 
     return {
         "cpu": {
             "temp": cpuTemp.main ?? -999,
-            "speed": cpuSpd,
-            "load": (await info.currentLoad()).cpus.map(v => v.load)
+            "speed": cpuSpd.avg,
+            "load": (() => {
+                let total = 0;
+
+                for (let load of cpuLoad) {
+                    total += load;
+                }
+
+                return Math.round((total / cpuLoad.length) * 100) / 100;
+            })()
         },
         "ram": {
             "total": ram.total,
