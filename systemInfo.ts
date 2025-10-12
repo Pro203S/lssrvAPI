@@ -48,7 +48,7 @@ export async function getRealtimeInfo() {
 
     return {
         "cpu": {
-            "temp": cpuTemp.main ?? -1,
+            "temp": cpuTemp.main ?? -999,
             "speed": cpuSpd,
             "load": (await info.currentLoad()).cpus.map(v => v.load)
         },
@@ -64,7 +64,7 @@ export async function getRealtimeInfo() {
             "name": v.name,
             "vendor": v.vendor,
             "size": v.size,
-            "temp": v.temperature ?? -1
+            "temp": v.temperature ?? -999
         })),
         "fsStats": await info.fsStats(),
         "fsSize": await info.fsSize()
