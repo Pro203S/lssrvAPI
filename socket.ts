@@ -47,9 +47,20 @@ const InitalizeWebSocket = (server: http.Server) => {
         let heartbeatTimer: NodeJS.Timeout | null = null;
         let heartbeatWatchdog: NodeJS.Timeout | null = null;
 
-        let sendInformation = setInterval(async () => {
+        let isStopped = false;
+        let doNotSendInformation = false;
+        const sendInformation = async (interval: number) => {
+            if (doNotSendInformation) {
+                isStopped = true;
+                return;
+            }
+            isStopped = false;
+
             ws.send(JSON.stringify(await getRealtimeInfo()));
-        }, realtimeInterval);
+            await new Promise(r => setTimeout(r, interval));
+            await sendInformation(interval);
+        };
+        sendInformation(1500);
 
         heartbeatTimer = setInterval(() => {
             heartbeatWatchdog = setTimeout(() => {
@@ -62,7 +73,7 @@ const InitalizeWebSocket = (server: http.Server) => {
             }, 1500);
         }, heartbeatInterval);
 
-        ws.on("message", (data, isBinary) => {
+        ws.on("message", async (data, isBinary) => {
             if (isBinary) {
                 ws.close(1003, "Unsupported Data");
                 return;
@@ -88,10 +99,19 @@ const InitalizeWebSocket = (server: http.Server) => {
                 if (json.type === "interval") {
                     realtimeInterval = json.interval;
 
-                    clearInterval(sendInformation);
-                    sendInformation = setInterval(async () => {
-                        ws.send(JSON.stringify(await getRealtimeInfo()));
-                    }, realtimeInterval);
+                    doNotSendInformation = true;
+                    await new Promise<void>(r => {
+                        const a = setInterval(() => {
+                            if (isStopped) {
+                                clearInterval(a);
+                                r();
+                                return;
+                            }
+                        });
+                    });
+                    
+                    sendInformation(realtimeInterval);
+
                     return;
                 }
 
@@ -107,9 +127,9 @@ const InitalizeWebSocket = (server: http.Server) => {
         });
 
         ws.on("close", () => {
+            doNotSendInformation = true;
             clearInterval(heartbeatTimer!);
             clearTimeout(heartbeatWatchdog!);
-            clearInterval(sendInformation);
         });
     });
 };
