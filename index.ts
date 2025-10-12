@@ -93,6 +93,8 @@ app.get("/", async (req, res) => {
     }
 });
 
+app.get("/info", (_, res) => res.status(200).json({ "info": "lssvrAPI" }));
+
 server.listen(process.env.PORT, () => {
     log("Server ready in " + (new Date().getTime() - now.getTime()) + "ms");
     log("API server listening on", process.env.PORT);
