@@ -38,7 +38,7 @@ if (!process.env.HEARTBEAT_INTERVAL) {
 }
 //#endregion
 
-log("ServerStatsAPI\n");
+log("lssvrAPI\n");
 
 log("config.env:");
 log("- PORT:", process.env.PORT);
