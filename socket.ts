@@ -156,6 +156,7 @@ const InitalizeWebSocket = (server: http.Server) => {
                 await sendInformation[6](interval);
             } // 6 fsSize
         ];
+        sendInformation.forEach(v => v(realtimeInterval));
 
         heartbeatTimer = setInterval(() => {
             heartbeatWatchdog = setTimeout(() => {
