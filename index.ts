@@ -7,7 +7,7 @@ import dayjs from 'dayjs';
 import http from "http";
 import InitalizeWebSocket from './socket';
 import AuthMiddle from './authMiddle';
-import { getStaticInfo } from './systemInfo';
+import { getStaticInfo, startMonitor } from './systemInfo';
 import imageSize from 'image-size';
 import * as fs from 'fs';
 
@@ -98,4 +98,5 @@ app.get("/info", (_, res) => res.status(200).json({ "info": "lssvrAPI" }));
 server.listen(process.env.PORT, () => {
     log("Server ready in " + (new Date().getTime() - now.getTime()) + "ms");
     log("API server listening on", process.env.PORT);
+    startMonitor();
 });

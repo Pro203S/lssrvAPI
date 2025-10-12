@@ -1,51 +1,54 @@
 import info from 'systeminformation';
 
-let networkStats = {
-    down: 0,
-    up: 0,
-    sent: 0,
-    received: 0
+type DiskData = {
+    "device": string,
+    "type": string,
+    "name": string,
+    "vendor": string,
+    "size": number,
+    "temp": number,
 };
 
-let isMonitoring = false;
+export const datas = {
+    "cpu": {
+        "temp": -999,
+        "speed": 0,
+        "load": 0
+    },
+    "ram": {
+        "total": 0,
+        "used": 0
+    },
+    "net": {
+        "down": 0,
+        "up": 0,
+        "sent": 0,
+        "received": 0
+    },
+    "uptime": 0,
+    "disks": [] as DiskData[],
+    "fsStats": null as info.Systeminformation.FsStatsData | null,
+    "fsSize": [] as info.Systeminformation.FsSizeData[]
+}
 
-async function monitorNetwork() {
-    if (isMonitoring) return;
+let isMonitoring = [
+    false, // 0 cpu
+    false, // 1 ram
+    false, // 2 net
+    false, // 3 uptime
+    false, // 4 disks
+    false, // 5 fsStats
+    false  // 6 fsSize
+];
 
-    const iface = await info.networkInterfaceDefault().catch(() => "");
-    if (!iface) {
-        console.error("활성 네트워크 인터페이스를 찾지 못했습니다.");
-        return;
-    }
+async function monitorCpu() {
+    if (isMonitoring[0]) return;
 
-    isMonitoring = true;
-
-    // baseline
-    await info.networkStats(iface);
-
-    const statsArr = await info.networkStats(iface);
-    const s = Array.isArray(statsArr) ? statsArr[0] : statsArr;
-
-    const down = s.rx_sec ?? 0;
-    const up = s.tx_sec ?? 0;
-
-    networkStats = {
-        down: down,
-        up: up,
-        sent: s.tx_bytes,
-        received: s.rx_bytes
-    };
-    await new Promise(r => setTimeout(r, 1000));
-    return await monitorNetwork();
-};
-monitorNetwork();
-
-export async function realtime_cpu() {
     const cpuTemp = await info.cpuTemperature();
     const cpuSpd = await info.cpuCurrentSpeed();
     const cpuLoad = (await info.currentLoad()).cpus.map(v => v.load);
 
-    return {
+    datas.cpu = {
         "temp": cpuTemp.main ?? -999,
         "speed": cpuSpd.avg,
         "load": (() => {
@@ -58,23 +61,64 @@ export async function realtime_cpu() {
             return Math.round((total / cpuLoad.length) * 100) / 100;
         })()
     };
+
+    await new Promise(r => setTimeout(r, 1000));
+    return await monitorCpu();
 }
-export async function realtime_ram() {
+async function monitorRam() {
+    if (isMonitoring[1]) return;
+
     const ram = await info.mem();
 
-    return {
+    datas.ram = {
         "total": ram.total,
         "used": ram.used
     };
+
+    await new Promise(r => setTimeout(r, 1000));
+    return await monitorRam();
 }
-export function realtime_net() {
-    return networkStats;
+async function monitorNet() {
+    if (isMonitoring[2]) return;
+
+    const iface = await info.networkInterfaceDefault().catch(() => "");
+    if (!iface) {
+        console.error("활성 네트워크 인터페이스를 찾지 못했습니다.");
+        return;
+    }
+
+    isMonitoring[2] = true;
+
+    // baseline
+    await info.networkStats(iface);
+
+    const statsArr = await info.networkStats(iface);
+    const s = Array.isArray(statsArr) ? statsArr[0] : statsArr;
+
+    const down = s.rx_sec ?? 0;
+    const up = s.tx_sec ?? 0;
+
+    datas.net = {
+        down: down,
+        up: up,
+        sent: s.tx_bytes,
+        received: s.rx_bytes
+    };
+    await new Promise(r => setTimeout(r, 1000));
+    return await monitorNet();
 }
-export function realtime_uptime() {
-    return info.time().uptime;
+async function monitorUptime() {
+    if (isMonitoring[3]) return;
+
+    datas.uptime = info.time().uptime;
+
+    await new Promise(r => setTimeout(r, 1000));
+    return await monitorUptime();
 }
-export async function realtime_disks() {
-    return (await info.diskLayout()).map(v => ({
+async function monitorDisks() {
+    if (isMonitoring[4]) return;
+
+    datas.disks = (await info.diskLayout()).map(v => ({
         "device": v.device,
         "type": v.type,
         "name": v.name,
@@ -82,12 +126,35 @@ export async function realtime_disks() {
         "size": v.size,
         "temp": v.temperature ?? -999
     }));
+
+    await new Promise(r => setTimeout(r, 1000));
+    return await monitorDisks();
 }
-export async function realtime_fsStats() {
-    return await info.fsStats();
+async function monitorFsStats() {
+    if (isMonitoring[5]) return;
+
+    datas.fsStats = await info.fsStats();
+
+    await new Promise(r => setTimeout(r, 1000));
+    return await monitorFsStats();
 }
-export async function realtime_fsSize() {
-    return await info.fsSize();
+async function monitorFsSize() {
+    if (isMonitoring[6]) return;
+
+    datas.fsSize = await info.fsSize();
+
+    await new Promise(r => setTimeout(r, 1000));
+    return await monitorFsSize();
+}
+
+export function startMonitor() {
+    monitorCpu();
+    monitorRam();
+    monitorNet();
+    monitorUptime();
+    monitorDisks();
+    monitorFsStats();
+    monitorFsSize();
 }
 
 export async function getStaticInfo(scheme: string = "dark") {

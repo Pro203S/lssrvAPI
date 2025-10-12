@@ -2,7 +2,7 @@ import http from "http";
 import { WebSocketServer } from "ws";
 import { log } from ".";
 import chalk from "chalk";
-import { getStaticInfo, realtime_cpu, realtime_disks, realtime_fsSize, realtime_fsStats, realtime_net, realtime_ram, realtime_uptime } from "./systemInfo";
+import { getStaticInfo, datas } from "./systemInfo";
 
 const InitalizeWebSocket = (server: http.Server) => {
     const wss = new WebSocketServer({ noServer: true, perMessageDeflate: true });
@@ -47,116 +47,15 @@ const InitalizeWebSocket = (server: http.Server) => {
         let heartbeatTimer: NodeJS.Timeout | null = null;
         let heartbeatWatchdog: NodeJS.Timeout | null = null;
 
-        let isStopped: boolean[] = [false, false, false, false, false, false, false];
-        let doNotSendInformation = false;
-        const sendInformation = [
-            async (interval: number) => {
-                if (doNotSendInformation) {
-                    isStopped[0] = true;
-                    return;
-                }
-                isStopped[0] = false;
-
+        let sendInformation = setInterval(() => {
+            for (let key of Object.keys(datas)) {
                 ws.send(JSON.stringify({
-                    "type": "cpu",
-                    "data": await realtime_cpu()
-                }))
-
-                await new Promise(r => setTimeout(r, interval));
-                await sendInformation[0](interval);
-            }, // 0 cpu
-            async (interval: number) => {
-                if (doNotSendInformation) {
-                    isStopped[1] = true;
-                    return;
-                }
-                isStopped[1] = false;
-
-                ws.send(JSON.stringify({
-                    "type": "ram",
-                    "data": await realtime_ram()
-                }))
-
-                await new Promise(r => setTimeout(r, interval));
-                await sendInformation[1](interval);
-            }, // 1 ram
-            async (interval: number) => {
-                if (doNotSendInformation) {
-                    isStopped[2] = true;
-                    return;
-                }
-                isStopped[2] = false;
-
-                ws.send(JSON.stringify({
-                    "type": "net",
-                    "data": realtime_net()
-                }))
-
-                await new Promise(r => setTimeout(r, interval));
-                await sendInformation[2](interval);
-            }, // 2 net
-            async (interval: number) => {
-                if (doNotSendInformation) {
-                    isStopped[3] = true;
-                    return;
-                }
-                isStopped[3] = false;
-
-                ws.send(JSON.stringify({
-                    "type": "uptime",
-                    "data": realtime_uptime()
-                }))
-
-                await new Promise(r => setTimeout(r, interval));
-                await sendInformation[3](interval);
-            }, // 3 uptime
-            async (interval: number) => {
-                if (doNotSendInformation) {
-                    isStopped[4] = true;
-                    return;
-                }
-                isStopped[4] = false;
-
-                ws.send(JSON.stringify({
-                    "type": "disks",
-                    "data": await realtime_disks()
-                }))
-
-                await new Promise(r => setTimeout(r, interval));
-                await sendInformation[4](interval);
-            }, // 4 disks
-            async (interval: number) => {
-                if (doNotSendInformation) {
-                    isStopped[5] = true;
-                    return;
-                }
-                isStopped[5] = false;
-
-                ws.send(JSON.stringify({
-                    "type": "fsStats",
-                    "data": await realtime_fsStats()
-                }))
-
-                await new Promise(r => setTimeout(r, interval));
-                await sendInformation[5](interval);
-            }, // 5 fsStats
-            async (interval: number) => {
-                if (doNotSendInformation) {
-                    isStopped[6] = true;
-                    return;
-                }
-                isStopped[6] = false;
-
-                ws.send(JSON.stringify({
-                    "type": "fsSize",
-                    "data": await realtime_fsSize()
-                }))
-
-                await new Promise(r => setTimeout(r, interval));
-                await sendInformation[6](interval);
-            } // 6 fsSize
-        ];
-        sendInformation.forEach(v => v(realtimeInterval));
+                    "type": key,
+                    //@ts-ignore
+                    "data": datas[key]
+                }));
+            }
+        }, realtimeInterval);
 
         heartbeatTimer = setInterval(() => {
             heartbeatWatchdog = setTimeout(() => {
@@ -195,19 +94,10 @@ const InitalizeWebSocket = (server: http.Server) => {
                 if (json.type === "interval") {
                     realtimeInterval = json.interval;
 
-                    doNotSendInformation = true;
-                    await new Promise<void>(r => {
-                        const a = setInterval(() => {
-                            if (!isStopped.includes(false)) {
-                                clearInterval(a);
-                                r();
-                                return;
-                            }
-                        });
-                    });
+                    clearInterval(sendInformation);
+                    sendInformation = setInterval(() => {
 
-                    doNotSendInformation = false;
-                    sendInformation.forEach(v => v(realtimeInterval));
+                    })
 
                     return;
                 }
@@ -224,7 +114,7 @@ const InitalizeWebSocket = (server: http.Server) => {
         });
 
         ws.on("close", () => {
-            doNotSendInformation = true;
+            clearInterval(sendInformation);
             clearInterval(heartbeatTimer!);
             clearTimeout(heartbeatWatchdog!);
         });
