@@ -12,20 +12,20 @@ type DiskData = {
 export const datas = {
     "cpu": {
         "temp": -999,
-        "speed": 0,
-        "load": 0
+        "speed": -999,
+        "load": -999
     },
     "ram": {
-        "total": 0,
-        "used": 0
+        "total": -999,
+        "used": -999
     },
     "net": {
-        "down": 0,
-        "up": 0,
-        "sent": 0,
-        "received": 0
+        "down": -999,
+        "up": -999,
+        "sent": -999,
+        "received": -999
     },
-    "uptime": 0,
+    "uptime": -999,
     "disks": [] as DiskData[],
     "fsStats": null as info.Systeminformation.FsStatsData | null,
     "fsSize": [] as info.Systeminformation.FsSizeData[]
@@ -95,8 +95,8 @@ async function monitorNet() {
     const statsArr = await info.networkStats(iface);
     const s = Array.isArray(statsArr) ? statsArr[0] : statsArr;
 
-    const down = s.rx_sec ?? 0;
-    const up = s.tx_sec ?? 0;
+    const down = s.rx_sec ?? -999;
+    const up = s.tx_sec ?? -999;
 
     datas.net = {
         down: down,
