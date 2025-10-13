@@ -2,8 +2,6 @@
 
 ## Korean
 
-===========
-
 lssrv 앱에서 사용되는 API입니다.  
 서버의 상태를 앱에서 확인할 수 있습니다.
 
@@ -19,8 +17,6 @@ NodeJS를 설치 후 진행해주세요.
 
 ## English
 
-===========
-
 This is the API used by the lssrv app.  
 It lets the app check the status of your server.  
 
@@ -28,7 +24,7 @@ It lets the app check the status of your server.
 
 You need Node.js to run this server.  
 Install Node.js first.  
-[Install Node.js](https://nodejs.org/ko/download)  
+[Install Node.js](https://nodejs.org/en/download)  
 
 1. Open a terminal and run ```git clone https://github.com/Pro203S/lssrvAPI```
 2. Run ```npm i``` after moving into the lssrvAPI directory with cd ```lssrvAPI```.
