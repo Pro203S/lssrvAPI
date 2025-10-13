@@ -38,7 +38,7 @@ if (!process.env.HEARTBEAT_INTERVAL) {
 }
 //#endregion
 
-log("lssvrAPI\n");
+log("lssrvAPI\n");
 
 log("config.env:");
 log("- PORT:", process.env.PORT);
@@ -93,7 +93,7 @@ app.get("/", async (req, res) => {
     }
 });
 
-app.get("/info", (_, res) => res.status(200).json({ "info": "lssvrAPI" }));
+app.get("/info", (_, res) => res.status(200).json({ "info": "lssrvAPI" }));
 
 server.listen(process.env.PORT, () => {
     log("Server ready in " + (new Date().getTime() - now.getTime()) + "ms");
