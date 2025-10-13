@@ -96,8 +96,14 @@ const InitalizeWebSocket = (server: http.Server) => {
 
                     clearInterval(sendInformation);
                     sendInformation = setInterval(() => {
-
-                    })
+                        for (let key of Object.keys(datas)) {
+                            ws.send(JSON.stringify({
+                                "type": key,
+                                //@ts-ignore
+                                "data": datas[key]
+                            }));
+                        }
+                    }, realtimeInterval);
 
                     return;
                 }

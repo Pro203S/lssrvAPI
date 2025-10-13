@@ -4,9 +4,6 @@ type DiskData = {
     "device": string,
     "type": string,
     "name": string,
-    "vendor": string,
-    "size": number,
-    "temp": number,
 };
 
 export const datas = {
@@ -121,10 +118,7 @@ async function monitorDisks() {
     datas.disks = (await info.diskLayout()).map(v => ({
         "device": v.device,
         "type": v.type,
-        "name": v.name,
-        "vendor": v.vendor,
-        "size": v.size,
-        "temp": v.temperature ?? -999
+        "name": v.name
     }));
 
     await new Promise(r => setTimeout(r, 500));
