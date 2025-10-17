@@ -137,7 +137,6 @@ export function stopMonitor() {
     });
 }
 
-
 export async function getStaticInfo(scheme: string = "dark") {
     const cpu = await info.cpu();
     const mem = await info.mem();

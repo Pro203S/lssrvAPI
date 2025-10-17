@@ -91,23 +91,6 @@ const InitalizeWebSocket = (server: http.Server) => {
                     return;
                 }
 
-                if (json.type === "interval") {
-                    realtimeInterval = json.interval;
-
-                    clearInterval(sendInformation);
-                    sendInformation = setInterval(() => {
-                        for (let key of Object.keys(datas)) {
-                            ws.send(JSON.stringify({
-                                "type": key,
-                                //@ts-ignore
-                                "data": datas[key]
-                            }));
-                        }
-                    }, realtimeInterval);
-
-                    return;
-                }
-
                 ws.close(4000, "Unsupported Operation");
                 return;
             } catch (err) {
