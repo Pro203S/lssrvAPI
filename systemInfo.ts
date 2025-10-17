@@ -28,128 +28,115 @@ export const datas = {
     "fsSize": [] as info.Systeminformation.FsSizeData[]
 }
 
-let isMonitoring = [
-    false, // 0 cpu
-    false, // 1 ram
-    false, // 2 net
-    false, // 3 uptime
-    false, // 4 disks
-    false, // 5 fsStats
-    false  // 6 fsSize
-];
+const running = {
+    cpu: false,
+    ram: false,
+    net: false,
+    uptime: false,
+    disks: false,
+    fsStats: false,
+    fsSize: false,
+};
 
-async function monitorCpu() {
-    if (isMonitoring[0]) return;
+const timers: Partial<Record<keyof typeof running, NodeJS.Timeout>> = {};
+let defaultIface: string | null = null;
 
-    const cpuTemp = await info.cpuTemperature();
-    const cpuSpd = await info.cpuCurrentSpeed();
-    const cpuLoad = (await info.currentLoad()).cpus.map(v => v.load);
-
-    datas.cpu = {
-        "temp": cpuTemp.main ?? -999,
-        "speed": cpuSpd.avg,
-        "load": (() => {
-            let total = 0;
-
-            for (let load of cpuLoad) {
-                total += load;
-            }
-
-            return Math.round((total / cpuLoad.length) * 100) / 100;
-        })()
-    };
-
-    await new Promise(r => setTimeout(r, 500));
-    return await monitorCpu();
+function every(key: keyof typeof running, ms: number, fn: () => Promise<void>) {
+    if (timers[key]) return; // 이미 시작됨
+    timers[key] = setInterval(async () => {
+        if (running[key]) return; // 겹침 방지
+        running[key] = true;
+        try {
+            await fn();
+        } catch (e) {
+            // 필요시 로깅
+            // console.error(`[${key}]`, e);
+        } finally {
+            running[key] = false;
+        }
+    }, ms);
 }
-async function monitorRam() {
-    if (isMonitoring[1]) return;
 
-    const ram = await info.mem();
-
-    datas.ram = {
-        "total": ram.total,
-        "used": ram.used
-    };
-
-    await new Promise(r => setTimeout(r, 500));
-    return await monitorRam();
-}
-async function monitorNet() {
-    if (isMonitoring[2]) return;
-
-    const iface = await info.networkInterfaceDefault().catch(() => "");
-    if (!iface) {
-        console.error("활성 네트워크 인터페이스를 찾지 못했습니다.");
-        return;
+async function pickDefaultIface() {
+    try {
+        defaultIface = await info.networkInterfaceDefault();
+    } catch {
+        defaultIface = null;
     }
-
-    isMonitoring[2] = true;
-
-    // baseline
-    await info.networkStats(iface);
-
-    const statsArr = await info.networkStats(iface);
-    const s = Array.isArray(statsArr) ? statsArr[0] : statsArr;
-
-    const down = s.rx_sec ?? -999;
-    const up = s.tx_sec ?? -999;
-
-    datas.net = {
-        down: down,
-        up: up,
-        sent: s.tx_bytes,
-        received: s.rx_bytes
-    };
-    await new Promise(r => setTimeout(r, 500));
-    return await monitorNet();
-}
-async function monitorUptime() {
-    if (isMonitoring[3]) return;
-
-    datas.uptime = info.time().uptime;
-
-    await new Promise(r => setTimeout(r, 500));
-    return await monitorUptime();
-}
-async function monitorDisks() {
-    if (isMonitoring[4]) return;
-
-    datas.disks = (await info.diskLayout()).map(v => ({
-        "device": v.device,
-        "type": v.type,
-        "name": v.name
-    }));
-
-    await new Promise(r => setTimeout(r, 500));
-    return await monitorDisks();
-}
-async function monitorFsStats() {
-    if (isMonitoring[5]) return;
-
-    datas.fsStats = await info.fsStats();
-
-    await new Promise(r => setTimeout(r, 500));
-    return await monitorFsStats();
-}
-async function monitorFsSize() {
-    if (isMonitoring[6]) return;
-
-    datas.fsSize = await info.fsSize();
-
-    await new Promise(r => setTimeout(r, 500));
-    return await monitorFsSize();
 }
 
 export function startMonitor() {
-    monitorCpu();
-    monitorRam();
-    monitorNet();
-    monitorUptime();
-    monitorDisks();
-    monitorFsStats();
-    monitorFsSize();
+    // 네트워크 인터페이스는 한 번만 선택, 실패 시 주기적으로 재시도
+    pickDefaultIface();
+    setInterval(() => { if (!defaultIface) pickDefaultIface(); }, 5000);
+
+    // 빠르게 변하는 항목
+    every('cpu', 1000, async () => {
+        const [cpuTemp, cpuSpd, load] = await Promise.all([
+            info.cpuTemperature().catch(() => ({ main: -999 })),
+            info.cpuCurrentSpeed().catch(() => ({ avg: -999 })),
+            info.currentLoad().catch(() => ({ cpus: [] as { load: number }[] })),
+        ]);
+
+        const loads = load.cpus?.map(v => v.load) ?? [];
+        const avg = loads.length
+            ? Math.round((loads.reduce((a, b) => a + b, 0) / loads.length) * 100) / 100
+            : -999;
+
+        datas.cpu = {
+            temp: cpuTemp.main ?? -999,
+            speed: (cpuSpd as any).avg ?? -999,
+            load: avg,
+        };
+    });
+
+    every('ram', 1000, async () => {
+        const m = await info.mem().catch(() => ({ total: -999, used: -999 }));
+        datas.ram = { total: m.total, used: m.used };
+    });
+
+    every('net', 1000, async () => {
+        if (!defaultIface) return;
+        const statsArr = await info.networkStats(defaultIface).catch(() => null);
+        if (!statsArr) return;
+        const s = Array.isArray(statsArr) ? statsArr[0] : statsArr;
+        datas.net = {
+            down: s?.rx_sec ?? -999,
+            up: s?.tx_sec ?? -999,
+            sent: s?.tx_bytes ?? -999,
+            received: s?.rx_bytes ?? -999,
+        };
+    });
+
+    every('uptime', 1000, async () => {
+        datas.uptime = info.time().uptime ?? -999;
+    });
+
+    // 느리게 변하는 항목(부하 큰 API)
+    every('disks', 60_000, async () => {
+        const disks = await info.diskLayout().catch(() => []);
+        datas.disks = disks.map(v => ({ device: v.device, type: v.type, name: v.name }));
+    });
+
+    every('fsStats', 5_000, async () => {
+        datas.fsStats = await info.fsStats().catch(() => null);
+    });
+
+    every('fsSize', 30_000, async () => {
+        datas.fsSize = await info.fsSize().catch(() => []);
+    });
 }
+
+export function stopMonitor() {
+    (Object.keys(timers) as (keyof typeof running)[]).forEach(k => {
+        if (timers[k]) {
+            clearInterval(timers[k]!);
+            delete timers[k];
+            running[k] = false;
+        }
+    });
+}
+
 
 export async function getStaticInfo(scheme: string = "dark") {
     const cpu = await info.cpu();
